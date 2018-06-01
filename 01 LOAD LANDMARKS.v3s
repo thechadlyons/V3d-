@@ -1,0 +1,32 @@
+! Load Landmarks
+!
+! Script loads Landmarks from MDH files, script assumes that markers and your mdh match exactly.
+! This is a step you could include in coding to avoid 
+! the build model (by hand or importing with clicking) step
+!****Written by Chad Lyons****!
+
+
+Create_Hybrid_Model
+! /CALIBRATION_FILE=
+! /RANGE=ALL_FRAMES;
+;
+
+Open_File
+! /FILE_NAME=
+;
+
+Assign_Model_File
+! /CALIBRATION_FILE=
+/MOTION_FILE_NAMES=*.c3d
+! /REMOVE_EXISTING_ASSIGNMENTS=FALSE
+;
+
+Switch_to_Model_Builder_Mode
+
+;
+
+Apply_Model_Template
+/MODEL_TEMPLATE=C:\0 Data Processing\Visual 3D\Scripts\WHEREVERYOURACTUAL_MDH_FILEIS
+! /CALIBRATION_FILE=
+;
+

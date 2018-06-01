@@ -1,0 +1,215 @@
+! Open Trials, apply TAGs, Interpolate, and Filter raw data
+!
+! This script prompts user to:
+! 1) select c3d files to insert into V3D workspace
+! 2) assigns selected c3d files to current model
+! 4) identifies the data loaded Overground / Treadmill
+!
+! Please note if you use a different trial name convention
+! this script will need to be modified.
+!
+! Written for the MPL
+! CHAD LYONS 20160120
+
+!************Determine Folder Path******************
+!************from the already opened model (DIGITIZE trial)
+
+Set_Pipeline_Parameter_To_List_Of_Tagged_Files
+/PARAMETER_NAME=longname
+/TAG_NAME=ALL_FILES
+/GET_CURRENT_SELECTED_FILES=true
+/USE_SHORT_FILENAMES=false
+;
+
+!************Determine Folder Path******************
+
+Set_Pipeline_Parameter_To_List_Of_Tagged_Files
+/PARAMETER_NAME=shortname
+/TAG_NAME=ALL_FILES
+/GET_CURRENT_SELECTED_FILES=true
+/USE_SHORT_FILENAMES=true
+;
+
+!************Determine Folder Path******************
+
+Set_Pipeline_Parameter
+/PARAMETER_NAME=folderpath
+/PARAMETER_VALUE=::longname
+/PARAMETER_VALUE_SEARCH_FOR=\&::shortname
+/PARAMETER_VALUE_REPLACE_WITH=\
+! /PARAMETER_VALUE_PREFIX=
+! /PARAMETER_VALUE_APPEND=
+;
+
+Set_Default_Folders
+! /PLUGINS=
+! /SEGMENT_GRAPHICS=
+! /PIPELINE=
+! /REPORT_TEMPLATE=
+! /MODEL_TEMPLATE=
+/MOTION_FILE=::folderpath
+!/DEFAULT_DATA=
+! /DEFAULT_MODEL_TEMPLATE=
+! /DEFAULT_REPORT_TEMPLATE=
+! /CMO_LIBRARY_PATH=
+;
+
+!************Open Motion Data****************
+!************Select any motion trials, this script is standardized and is set up to process:
+!************OG and TM motion trials
+
+File_Open
+!/FILE_NAME=
+;
+
+Assign_Model_File
+! /CALIBRATION_FILE=
+ /MOTION_FILE_NAMES=::FILE_NAME
+! /REMOVE_EXISTING_ASSIGNMENTS=FALSE
+;
+
+!*** Just assigning tags to files with certain names**!
+Assign_Tags_To_Files
+/MOTION_FILE_NAMES=*OG*.c3d
+/TAGS=OG
+;
+
+Assign_Tags_To_Files
+/MOTION_FILE_NAMES=*OG*.c3d
+/TAGS=EXPORT_OG
+;
+
+Assign_Tags_To_Files
+/MOTION_FILE_NAMES=*TM*.c3d
+/TAGS=TM
+;
+
+Assign_Tags_To_Files
+/MOTION_FILE_NAMES=*TM*.c3d
+/TAGS=EXPORT_TM
+;
+
+Assign_Tags_To_Files
+/MOTION_FILE_NAMES=*_FEED1*.c3d
+/TAGS=FEED1
+;
+
+Assign_Tags_To_Files
+/MOTION_FILE_NAMES=*_NOFEED1*.c3d
+/TAGS=NOFEED1
+;
+
+Assign_Tags_To_Files
+/MOTION_FILE_NAMES=*_NOFEED2*.c3d
+/TAGS=NOFEED2
+;
+
+Select_Active_File
+/FILE_NAME=OG+FEED1+NOFEED1+NOFEED2
+;
+
+!*** Essentially gap filling***!
+Interpolate
+/SIGNAL_TYPES=TARGET
+/SIGNAL_FOLDER=ORIGINAL
+! /SIGNAL_NAMES=
+! /RESULT_FOLDER=PROCESSED
+! /RESULT_SUFFIX=
+/MAXIMUM_GAP=14
+! /NUM_FIT=3
+! /POLYNOMIAL_ORDER=3
+;
+
+!*** Filtering data, change to whatever your lab has decided is suitable***!
+Lowpass_Filter
+/SIGNAL_TYPES=TARGET
+! /SIGNAL_NAMES=
+/SIGNAL_FOLDER=PROCESSED
+/NUM_REFLECTED=7
+/FREQUENCY_CUTOFF=6.000000
+;
+
+Lowpass_Filter
+/SIGNAL_TYPES=FORCE+COFP+FREEMOMENT
+! /SIGNAL_NAMES=
+/SIGNAL_FOLDER=ORIGINAL+ORIGINAL+ORIGINAL
+! /RESULT_SUFFIX=
+! /RESULT_FOLDER=PROCESSED
+! /FILTER_CLASS=BUTTERWORTH
+/FREQUENCY_CUTOFF=50.000000
+/NUM_REFLECTED=7
+! /TOTAL_BUFFER_SIZE=6
+! /NUM_BIDIRECTIONAL_PASSES=1
+;
+
+!====== CHECK THE SIGNAL NAMES ON THIS======!
+
+
+
+Lowpass_Filter
+/SIGNAL_TYPES=ANALOG+ANALOG+ANALOG+ANALOG+ANALOG+ANALOG
+/SIGNAL_NAMES=Fx+Fy+Fz+Mx+My+Mz
+/SIGNAL_FOLDER=ORIGINAL+ORIGINAL+ORIGINAL+ORIGINAL+ORIGINAL+ORIGINAL
+!/RESULT_SUFFIX=
+! /RESULT_FOLDER=PROCESSED
+!/FILTER_CLASS=BUTTERWORTH
+/FREQUENCY_CUTOFF=50
+/NUM_REFLECTED=3
+/TOTAL_BUFFER_SIZE=3
+!/NUM_BIDIRECTIONAL_PASSES=1
+;
+
+Recalc
+;
+
+! Gait Events
+
+!*** might have to be altered according to your lab's directionality***!
+Automatic_Gait_Events
+! /SELECT_X=FALSE
+/SELECT_Y=TRUE
+/SELECT_Z=FALSE
+! /FRAME_WINDOW=8
+! /USE_TPR=TRUE
+;
+
+Switch_to_Event_Processing_Mode
+;
+
+Interactive_Remove_Graph_Signals
+/SELECTED_INDEX=3
+! /SELECTED_SUBINDEX=
+;
+
+Interactive_Remove_Graph_Signals
+/SELECTED_INDEX=2
+! /SELECTED_SUBINDEX=
+;
+
+Interactive_Remove_Graph_Signals
+/SELECTED_INDEX=1
+! /SELECTED_SUBINDEX=
+;
+
+Highlight_Event_Label
+/EVENT_LABEL=LHS
+;
+
+Highlight_Event_Label
+/EVENT_LABEL=LTO
+;
+
+Highlight_Event_Label
+/EVENT_LABEL=RHS
+;
+
+Highlight_Event_Label
+/EVENT_LABEL=RTO
+;
+
+File_Save_As
+! /FILE_NAME=
+! /SET_PROMPT=Save CMO file as
+! /SAVE_EMBEDDED_GRAPHICS=FALSE
+;
+
